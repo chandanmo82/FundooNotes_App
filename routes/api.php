@@ -3,10 +3,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\CollaboratorController;
-use App\Http\Controllers\ForgotPasswordController;
-use App\Http\Controllers\LableController;
 use App\Http\Controllers\NoteController;
+use App\Http\Controllers\ForgotPasswordController;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -30,4 +30,13 @@ Route::group([
     Route::post('/login', [UserController::class, 'login']);
     Route::post('/register', [UserController::class, 'register']);
     Route::post('/logout', [UserController::class, 'logout']);
+    Route::post('/forgotpassword', [ForgotPasswordController::class, 'forgotPassword']);
+    Route::post('/resetpassword', [ForgotPasswordController::class, 'resetPassword']);
+
+    Route::post('createnote', [NoteController::class, 'createNote']);
+    Route::get('displaynote', [NoteController::class, 'displayNoteById']);
+    Route::post('deletenote', [NoteController::class, 'deleteNoteById']);
+    Route::post('updatenote', [NoteController::class, 'updateNoteById']);
+    Route::get('getallnotes', [NoteController::class, 'getAllNotes']);
+    
 }); 

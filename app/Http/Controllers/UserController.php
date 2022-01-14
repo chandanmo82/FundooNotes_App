@@ -1,19 +1,16 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use app\Http\Requests\SendEmailRequest;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Models\PasswordReset;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Exception;
-use Tymon\JWTAuth\Factory;
-use Illuminate\Support\Facades\Hash;
+
 
 /**
  * @since 2-jan-2022
@@ -69,12 +66,6 @@ class UserController extends Controller
             'password' => bcrypt($request->password),
             ]);
 
-        //log info method 
-        /*Log::info('Registered user Email : '.'Email Id :'.$request->email );        
-
-        $value = Cache::remember('users', 0.5, function () {
-            return DB::table('users')->get();
-        });*/
 
         return response()->json([
             'message' => 'User successfully registered',
@@ -90,7 +81,7 @@ class UserController extends Controller
      */
     public function login(Request $request)
     {
-    	$validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string|min:6',
         ]);
@@ -118,24 +109,13 @@ class UserController extends Controller
         {  
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        /*
         Log::info('Login Success : '.'Email Id :'.$request->email ); 
        
         return response()->json([ 
             'message' => 'Login successfull',  
             'access_token' => $token
-        ],200);*/
+        ],200);
     }
-
-    /**
-     * refreshes and gives a new token.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    /*public function refresh() 
-    {
-        return $this->createNewToken(auth()->refresh());
-    }*/
 
     /**
      * Log the user out (Invalidate the token).
@@ -149,6 +129,8 @@ class UserController extends Controller
         
         
     }
+
+    
 
     /**
      * Get the token array structure.
