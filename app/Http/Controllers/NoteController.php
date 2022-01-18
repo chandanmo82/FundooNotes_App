@@ -78,17 +78,17 @@ class NoteController extends Controller
      */
     public function displayNoteById(Request $request)
     {
-        
+
         try
         {
-            $id = $request->input('id');
+            //$id = $request->input('id');
             $User = JWTAuth::parseToken()->authenticate();
 
             $value = Cache::remember('notes', 0.5, function () {
                 return DB::table('notes')->get();
             });
             
-            $notes = $User->notes()->find($id);
+            $notes = Note::where('user_id' , $User->id)->get();
             if($notes == '')
             {
                 return response()->json([ 'message' => 'Notes not found'], 404);
@@ -98,7 +98,7 @@ class NoteController extends Controller
         {
             return response()->json(['message' => 'Invalid authorization token' ], 404);
         }
-        Log::info("note fetched",['user_id'=>$User,'note_id'=>$request->id]);   
+        
         return $notes;
     }
 
@@ -186,34 +186,5 @@ class NoteController extends Controller
         }
         
     }
-
-    /**
-     * This function takes the User access token and checks if it 
-     * authorised or not if so, it returns the notes and associated
-     * labels.  
-     * 
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getAllNotes()
-    {
-        $currentUser = JWTAuth::parseToken()->authenticate();
-
-        if ($currentUser) 
-        {
-            $user = Note::leftJoin('collabarators', 'collabarators.note_id', '=', 'notes.id')->leftJoin('labels', 'labels.note_id', '=', 'notes.id')
-            ->select('notes.id','notes.title','notes.description','notes.pin','notes.archive','notes.colour','collabarators.email as Collabarator','labels.labelname')
-            ->where('notes.pin','=','0')->where('notes.archive','=','0')
-            ->where('notes.user_id','=',$currentUser->id)->orWhere('collabarators.email','=',$currentUser->email)->get();
-                
-            if ($user=='[]')
-            {
-                return response()->json(['message' => 'Notes not found'], 404);
-            }
-            return response()->json([
-                'notes' => $user,
-                'message' => 'Fetched Notes Successfully'
-            ], 201);
-        }
-        return response()->json([ 'message' => 'Invalid token'],403);
-    }
+    
 }   

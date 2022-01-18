@@ -11,15 +11,10 @@ class Note extends Model
     
     protected $table="notes";
     protected $fillable = ['title','description'];
-   
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
-    public function label()
-    {
-        return $this->belongsTo(Label::class);
-    }
+   
 }

@@ -37,6 +37,5 @@ Route::group([
     Route::get('displaynote', [NoteController::class, 'displayNoteById']);
     Route::post('deletenote', [NoteController::class, 'deleteNoteById']);
     Route::post('updatenote', [NoteController::class, 'updateNoteById']);
-    Route::get('getallnotes', [NoteController::class, 'getAllNotes']);
     
 }); 

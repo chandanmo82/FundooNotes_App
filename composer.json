@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^7.3|^8.0",
+        "darkaonline/l5-swagger": "8.1",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.75",
@@ -13,7 +14,7 @@
         "laravel/tinker": "^2.5",
         "phpmailer/phpmailer": "^6.5",
         "tymon/jwt-auth": "^1.0.2",
-        "zircote/swagger-php": "^4.2"
+        "zircote/swagger-php": "3.*"
     },
     "require-dev": {
         "facade/ignition": "^2.5",
