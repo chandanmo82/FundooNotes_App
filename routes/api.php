@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\LabelController;
 
 
 
@@ -37,5 +38,12 @@ Route::group([
     Route::get('displaynote', [NoteController::class, 'displayNoteById']);
     Route::post('deletenote', [NoteController::class, 'deleteNoteById']);
     Route::post('updatenote', [NoteController::class, 'updateNoteById']);
-    
+    Route::get('paginatenote', [NoteController::class, 'paginationNote']);
+
+    Route::post('createlable', [LabelController::class, 'createLabel']);
+    Route::post('addlabelbynoteid', [LabelController::class, 'addLabelByNoteId']);
+    Route::get('displaylable', [LabelController::class, 'displayLabelById']);
+    Route::post('updatelable', [LabelController::class, 'updateLabelById']);
+    Route::post('deletelable', [LabelController::class, 'deleteLabelById']);
+  
 }); 

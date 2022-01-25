@@ -186,5 +186,14 @@ class NoteController extends Controller
         }
         
     }
+    public function paginationNote()
+    {
+        $allNotes = Note::paginate(3); 
+
+        return response()->json([
+            'message' => 'Pagination aplied to all Notes',
+            'notes' =>  $allNotes,
+        ], 201);
+    }
     
 }   

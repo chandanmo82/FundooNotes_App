@@ -1,15 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
-use app\Http\Requests\SendEmailRequest;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Tymon\JWTAuth\Facades\JWTAuth;
-use App\Models\PasswordReset;
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+
 
 
 /**
@@ -31,7 +28,7 @@ class UserController extends Controller
     }
     /**
      * @OA\Post(
-     *   path="/api/register",
+     *   path="/api/auth/register",
      *   summary="register",
      *   description="register the user for login",
      *   @OA\RequestBody(
@@ -52,6 +49,7 @@ class UserController extends Controller
      *   @OA\Response(response=201, description="User successfully registered"),
      *   @OA\Response(response=401, description="The email has already been taken"),
      * )
+
 
      * It takes a POST request and requires fields for the user to register
      * and validates them if it is validated,creates those fields including
@@ -94,8 +92,29 @@ class UserController extends Controller
             'user' => $user
         ], 201);
     }
-
-     /**
+    /**
+     * @OA\Post(
+     *   path="/api/auth/login",
+     *   summary="login",
+     *   description=" login ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"email", "password"},
+     *               @OA\Property(property="email", type="string"),
+     *               @OA\Property(property="password", type="password"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=200, description="Login successfull"),
+     *   @OA\Response(response=401, description="we can not find the user with that e-mail address You need to register first"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
      * Takes the POST request and user credentials checks if it correct,
      * if so, returns JWT access token.
      *
@@ -132,7 +151,6 @@ class UserController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         Log::info('Login Success : '.'Email Id :'.$request->email ); 
-       
         return response()->json([ 
             'message' => 'Login successfull',  
             'access_token' => $token

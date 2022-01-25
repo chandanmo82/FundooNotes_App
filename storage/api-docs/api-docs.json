@@ -9,11 +9,11 @@
         "version": "1.0.0"
     },
     "paths": {
-        "/api/register": {
+        "/api/auth/register": {
             "post": {
                 "summary": "register",
                 "description": "register the user for login",
-                "operationId": "2f25885f3b6f61ca11724ec302d2e439",
+                "operationId": "47d5ee6b3638073a988b692b1a5902cf",
                 "requestBody": {
                     "content": {
                         "multipart/form-data": {
@@ -58,6 +58,60 @@
                         "description": "The email has already been taken"
                     }
                 }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "summary": "login",
+                "description": " login ",
+                "operationId": "224ca9cc21e92b4e3291419882455b09",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {}
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successfull"
+                    },
+                    "401": {
+                        "description": "we can not find the user with that e-mail address You need to register first"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "Bearer": {
+                "type": "http",
+                "description": "Laravel bearer token authentication",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
             }
         }
     },
