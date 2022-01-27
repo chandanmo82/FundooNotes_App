@@ -28,11 +28,11 @@ Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
 ], function ($router) {
-    Route::post('/login', [UserController::class, 'login']);
-    Route::post('/register', [UserController::class, 'register']);
-    Route::post('/logout', [UserController::class, 'logout']);
-    Route::post('/forgotpassword', [ForgotPasswordController::class, 'forgotPassword']);
-    Route::post('/resetpassword', [ForgotPasswordController::class, 'resetPassword']);
+    Route::post('login', [UserController::class, 'login']);
+    Route::post('register', [UserController::class, 'register']);
+    Route::post('logout', [UserController::class, 'logout']);
+    Route::post('forgotpassword', [ForgotPasswordController::class, 'forgotPassword']);
+    Route::post('resetpassword', [ForgotPasswordController::class, 'resetPassword']);
 
     Route::post('createnote', [NoteController::class, 'createNote']);
     Route::get('displaynote', [NoteController::class, 'displayNoteById']);

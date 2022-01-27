@@ -89,5 +89,59 @@ class UserControllerTest extends TestCase
         ])->json('POST', '/api/auth/logout');
         $response->assertStatus(201)->assertJson(['message'=> 'User successfully signed out']);    
     }
+    /**
+     * @test for
+     * Successfull forgotpassword
+     */
+    public function test_SuccessfulForgotPassword()
+    {
+        {
+            $response = $this->withHeaders([
+                'Content-Type' => 'Application/json',
+            ])->json('POST', '/api/auth/forgotpassword', [
+                "email" => "chandanmohantydon82@gmail.com"
+            ]);
+            
+            $response->assertStatus(200)->assertJson(['message'=> 'password reset link genereted in mail']);
+        }
+
+    }
+    /**
+     * @test for
+     * UnSuccessfull forgotpassword
+     */
+    public function test_IfGiven_InvalidEmailId()
+    {
+      {
+          $response = $this->withHeaders([
+              'Content-Type' => 'Application/json',
+          ])->json('POST', '/api/auth/forgotpassword', [
+              "email" => "kumar@gmail.com"
+          ]);
+          
+          $response->assertStatus(404)->assertJson(['message'=> 'we can not find a user with that email address']);
+      }
+    }
+    /**
+     * @test for
+     * Successfull resetpassword
+     */
+    public function test_SuccessfulResetPassword()
+    {
+        {
+          $response = $this->withHeaders([
+              'Content-Type' => 'Application/json',
+          ])->json('POST', '/api/auth/resetpassword', [
+              "new_password" => "kumar3516",
+              "confirm_password" => "kumar3516",
+              "token" => "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3RcL2FwaVwvYXV0aFwvZm9yZ290cGFzc3dvcmQiLCJpYXQiOjE2MzQ2NTExOTMsImV4cCI6MTYzNDY1NDc5MywibmJmIjoxNjM0NjUxMTkzLCJqdGkiOiJIVVl2bThwcHdmSDM1bkxCIiwic3ViIjo4LCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.fziPLSL71dgJoFKv0U-78m-bKqSje7aCR-I2Y9Zd-YE"
+          ]);
+          
+          $response->assertStatus(201)->assertJson(['message'=> 'Password reset successfull!']);
+        }
+    }
+
+
+
 
 }

@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Label;
+use App\Models\LabelNote;
+use App\Exceptions\FundooNoteException;
 use Exception;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -21,12 +25,34 @@ class LabelController extends Controller
      * This function takes the User access token and labelname
      * creates a label for that respective user.
      */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/createlable",
+     *   summary="Create Label",
+     *   description=" Create Label ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"labelname"},
+     *               @OA\Property(property="labelname", type="string"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="Label added Sucessfully"),
+     *   @OA\Response(response=404, description="Invalid authorization token"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
 
     public function createLabel(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'labelname' => 'required|string|between:2,15',
-            'note_id' => 'required',
         ]);
 
         if($validator->fails())
@@ -46,7 +72,9 @@ class LabelController extends Controller
         
             $label = new Label;
             $label->labelname = $request->get('labelname');
-            $label->note_id =$request->note_id;
+            $value = Cache::remember('labels', 3600, function () {
+                return DB::table('labels')->get();
+            });
             
             if($currentUser->labels()->save($label))
             {
@@ -63,10 +91,34 @@ class LabelController extends Controller
      * 
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/addlabelbynoteid",
+     *   summary="Add Label By Note Id",
+     *   description=" Add Label By Note Id ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"label_id" , "note_id"},
+     *               @OA\Property(property="label_id", type="integer"),
+     *               @OA\Property(property="note_id", type="integer"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="Label Added to Note Sucessfully"),
+     *   @OA\Response(response=404, description="Invalid authorization token"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
     public function addLabelByNoteId(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required',
+            'label_id' => 'required',
             'note_id' => 'required'
         ]);
 
@@ -79,10 +131,10 @@ class LabelController extends Controller
         
         if($currentUser)
         {
-            $id = $request->input('id');
+            $label_id = $request->input('label_id');
             $note_id = $request->input('note_id');
             
-            $label = $currentUser->labels()->find($id);
+            $label = $currentUser->labels()->find($label_id);
     
             if(!$label)
             {
@@ -95,10 +147,11 @@ class LabelController extends Controller
             {
                 return response()->json([ 'message' => 'Notes not Found'], 404);
             }
-
-            $label->note_id = $request->get('note_id');
+            $labelNote = new LabelNote();
+            $labelNote->note_id = $request->get('note_id');
+            $labelNote->label_id = $request->get('label_id');
             
-            if($currentUser->labels()->save($label))
+            if($currentUser->labelnote()->save($labelNote))
             {
                 return response()->json([ 'message' => 'Label Added to Note Sucessfully' ], 201);
             }
@@ -115,21 +168,37 @@ class LabelController extends Controller
      * 
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * @OA\Get(
+     *   path="/api/auth/displaylable",
+     *   summary="Display Label",
+     *   description=" Display Label ",
+     *   @OA\RequestBody(
+     *         
+     *    ),
+     *   @OA\Response(response=404, description="Invalid authorization token"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
     public function displayLabelById(Request $request)
     {
         try
         {
-            //$id = $request->input('id');
             $User = JWTAuth::parseToken()->authenticate();
             $labels = Label::where('user_id',$User->id)->get();
             if($labels == '')
             {
                 return response()->json([ 'message' => 'Label not found'], 404);
             }
+            if(!$labels){
+                throw new FundooNoteException("Invalid Authorization token ",404);
+            }
         }
-        catch(Exception $e)
+        catch(FundooNoteException $e)
         {
-            return response()->json(['message' => 'Invalid authorization token' ], 404);
+            return response()->json(['message' => $e->message(),'status' => $e->statusCode() ]);
         }
         return response()->json([
             'label' => $labels
@@ -142,6 +211,30 @@ class LabelController extends Controller
      * 
      * 
      * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/updatelable",
+     *   summary="Update Label",
+     *   description=" Update label ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"id" , "labelname"},
+     *               @OA\Property(property="id", type="integer"),
+     *               @OA\Property(property="labelname", type="string"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="Label updated Sucessfully"),
+     *   @OA\Response(response=404, description="Invalid authorization token"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
      */
     public function updateLabelById(Request $request)
     {
@@ -166,16 +259,22 @@ class LabelController extends Controller
             }
     
             $label->fill($request->all());
+            $value = Cache::remember('labels', 3600, function () {
+                return DB::table('labels')->get();
+            });
     
             if($label->save())
             {
                 Log::info('Label updated',['user_id'=>$currentUser,'label_id'=>$request->id]);
                 return response()->json(['message' => 'Label updated Sucessfully' ], 201);
+            }
+            if(!($label->save())){
+                throw new FundooNoteException("Invalid Authorization token ",404);
             }      
         }
-        catch(Exception $e)
+        catch(FundooNoteException $e)
         {
-            return response()->json(['message' => 'Invalid authorization token' ], 404);
+            return response()->json(['message' => $e->message(),'status' => $e->statusCode()]);
         }
         return $label;
     }
@@ -186,6 +285,29 @@ class LabelController extends Controller
      * and deleted that particular label id.
      * 
      * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/deletelable",
+     *   summary="Delete Label",
+     *   description=" Delete label ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"id"},
+     *               @OA\Property(property="id", type="integer"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="Label deleted Sucessfully"),
+     *   @OA\Response(response=404, description="Invalid authorization token"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
      */
     public function deleteLabelById(Request $request)
     {
@@ -207,16 +329,22 @@ class LabelController extends Controller
                 Log::error('Label Not Found',['label_id'=>$request->id]);
                 return response()->json(['message' => 'Label not Found'], 404);
             }
+            $value = Cache::remember('labels', 3600, function () {
+                return DB::table('labels')->get();
+            });
     
             if($label->delete())
             {
                 Log::info('Label deleted',['user_id'=>$currentUser,'label_id'=>$request->id]);
                 return response()->json(['message' => 'Label deleted Sucessfully'], 201);
+            }
+            if(!($label->delete())){
+                throw new FundooNoteException("Invalid Authorization token ",404);
             }   
         }
-        catch(Exception $e)
+        catch(FundooNoteException $e)
         {
-            return response()->json(['message' => 'Invalid authorization token' ], 404);
+            return response()->json(['message' => $e->message(),'status' => $e->statusCode()]);
         }
     }
 

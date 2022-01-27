@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Note;
+use App\Exceptions\FundooNoteException;
 use Exception;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -29,6 +30,30 @@ class NoteController extends Controller
      * 
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/createnote",
+     *   summary="Create Note",
+     *   description=" Create Note ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"title", "description"},
+     *               @OA\Property(property="title", type="string"),
+     *               @OA\Property(property="description", type="string"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="notes created successfully"),
+     *   @OA\Response(response=404, description="Invalid authorization token"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
     public function createNote(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -48,25 +73,27 @@ class NoteController extends Controller
             $note->description = $request->input('description');
             $note->user_id = Auth::user()->id;
             $note->save();
-
-            $value = Cache::remember('notes', 1, function () {
+            if(!$note){
+                throw new FundooNoteException("Invalid Authorization token ",404); 
+            }
+            $value = Cache::remember('notes', 3600, function () {
                 return DB::table('notes')->get();
             });
         } 
-		catch (Exception $e) 
+		catch (FundooNoteException $e) 
 		{
             Log::error('Invalid User');
             return response()->json([
-                'status' => 404, 
-                'message' => 'Invalid authorization token'
-            ], 404);
+                'status' => $e->statusCode(), 
+                'message' => $e->message()
+            ]);
         }
 
         Log::info('notes created',['user_id'=>$note->user_id]);
         return response()->json([
 		'status' => 201, 
 		'message' => 'notes created successfully'
-        ],201);
+        ]);
     }
 
     /**
@@ -76,6 +103,20 @@ class NoteController extends Controller
      * 
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * @OA\Get(
+     *   path="/api/auth/displaynote",
+     *   summary="Display Note",
+     *   description=" Display Note ",
+     *   @OA\RequestBody(
+     *         
+     *    ),
+     *   @OA\Response(response=404, description="Invalid authorization token"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
     public function displayNoteById(Request $request)
     {
 
@@ -84,7 +125,7 @@ class NoteController extends Controller
             //$id = $request->input('id');
             $User = JWTAuth::parseToken()->authenticate();
 
-            $value = Cache::remember('notes', 0.5, function () {
+            $value = Cache::remember('notes', 3600, function () {
                 return DB::table('notes')->get();
             });
             
@@ -93,10 +134,13 @@ class NoteController extends Controller
             {
                 return response()->json([ 'message' => 'Notes not found'], 404);
             }
+            if(!$notes){
+                throw new FundooNoteException("Invalid Authorization token ",404);
+            }
         }
-        catch(Exception $e)
+        catch(FundooNoteException $e)
         {
-            return response()->json(['message' => 'Invalid authorization token' ], 404);
+            return response()->json(['message' => $e->message(),'status' => $e->statusCode()]);
         }
         
         return $notes;
@@ -108,6 +152,31 @@ class NoteController extends Controller
      * or not if so, updates it successfully.
      * 
      * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/updatenote",
+     *   summary="Update Note",
+     *   description=" Update Note ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"id" , "title", "description"},
+     *               @OA\Property(property="id", type="integer"),
+     *               @OA\Property(property="title", type="string"),
+     *               @OA\Property(property="description", type="string"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="Note updated Sucessfully"),
+     *   @OA\Response(response=404, description="Invalid authorization token"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
      */
     public function updateNoteById(Request $request)
     {
@@ -125,6 +194,9 @@ class NoteController extends Controller
             $id = $request->input('id');
             $currentUser = JWTAuth::parseToken()->authenticate();
             $note = $currentUser->notes()->find($id);
+            $value = Cache::remember('notes', 3600, function () {
+                return DB::table('notes')->get();
+            });
     
             if(!$note)
             {
@@ -138,11 +210,14 @@ class NoteController extends Controller
             {
                 Log::info('notes updated',['user_id'=>$currentUser,'note_id'=>$request->id]);
                 return response()->json(['message' => 'Note updated Sucessfully' ], 201);
-            }      
+            } 
+            if(!($note->save())){
+                throw new FundooNoteException("Invalid Authorization token ",404);
+            }     
         }
-        catch(Exception $e)
+        catch(FundooNoteException $e)
         {
-            return response()->json(['message' => 'Invalid authorization token' ], 404);
+            return response()->json(['message' => $e->message(),'status' => $e->statusCode()]);
         }
     }
 
@@ -152,6 +227,29 @@ class NoteController extends Controller
      * or not if so, deletes it successfully.
      * 
      * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/deletenote",
+     *   summary="Delete Note",
+     *   description=" Delete Note ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"id"},
+     *               @OA\Property(property="id", type="integer"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="Note deleted Sucessfully"),
+     *   @OA\Response(response=404, description="Invalid authorization token"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
      */
     public function deleteNoteById(Request $request)
     {
@@ -167,6 +265,9 @@ class NoteController extends Controller
             $id = $request->input('id');
             $currentUser = JWTAuth::parseToken()->authenticate();
             $note = $currentUser->notes()->find($id);
+            $value = Cache::remember('notes', 3600, function () {
+                return DB::table('notes')->get();
+            });
     
             if(!$note)
             {
@@ -178,14 +279,18 @@ class NoteController extends Controller
             {
                 Log::info('notes deleted',['user_id'=>$currentUser,'note_id'=>$request->id]);
                 return response()->json(['message' => 'Note deleted Sucessfully'], 201);
+            }
+            if(!($note->delete())){
+                throw new FundooNoteException("Invalid Authorization token ",404);
             }   
         }
-        catch(Exception $e)
+        catch(FundooNoteException $e)
         {
-            return response()->json(['message' => 'Invalid authorization token' ], 404);
+            return response()->json(['message' => $e->message(),'status' => $e->statusCode() ]);
         }
         
     }
+
     public function paginationNote()
     {
         $allNotes = Note::paginate(3); 

@@ -23,6 +23,26 @@ class ForgotPasswordController extends Controller
      * 
      * @return success reponse about reset link.
      */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/forgotpassword",
+     *   summary="forgotpassword",
+     *   description="Send Mail to the respectice mail id for forget password link",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"email"},
+     *               @OA\Property(property="email", type="string"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=200, description="we have mailed your password reset link to respective E-mail"),
+     *   @OA\Response(response=404, description="we can not find a user with that email address"),
+     * )
+     */
     public function forgotPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -45,7 +65,7 @@ class ForgotPasswordController extends Controller
         }
 
         Log::info('Forgot PassWord Link : '.'Email Id :'.$request->email );
-        return response()->json(['message' => 'we have mailed your password reset link to respective E-mail'],200);
+        return response()->json(['message' => 'password reset link genereted in mail'],200);
     }
 
     /**
@@ -55,6 +75,30 @@ class ForgotPasswordController extends Controller
      * good resets the password successfully.
      * 
      * 
+     */
+        /**
+     * @OA\Post(
+     *   path="/api/auth/resetpassword",
+     *   summary="resetpassword",
+     *   description="reset your password",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={ "new_password", "confirm_password"},
+     *               @OA\Property(property="new_password", type="password"),
+     *               @OA\Property(property="confirm_password", type="password"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=200, description="we have mailed your password reset link to respective E-mail"),
+     *   @OA\Response(response=404, description="we can not find a user with that email address"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
      */
     public function resetPassword(Request $request)
     {

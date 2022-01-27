@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\User;
 
@@ -85,7 +86,11 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password),
             ]);
-
+        Cache::put('firstname' ,'Chandan',$seconds = 10);
+        Cache::put('lastname' ,'Mohanty',$seconds = 10);
+        Cache::put('email' ,'Chandan@gmail.com',$seconds = 10);
+        Cache::put('password' ,'chandan@123',$seconds = 10);    
+        $value = Cache::get('firstname');
 
         return response()->json([
             'message' => 'User successfully registered',
@@ -111,9 +116,7 @@ class UserController extends Controller
      *    ),
      *   @OA\Response(response=200, description="Login successfull"),
      *   @OA\Response(response=401, description="we can not find the user with that e-mail address You need to register first"),
-     *   security = {
-     * {
-     * "Bearer" : {}}}
+
      * )
      * Takes the POST request and user credentials checks if it correct,
      * if so, returns JWT access token.
@@ -132,9 +135,9 @@ class UserController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $value = Cache::remember('users', 1, function () {
-            //return DB::table('users')->get();
-            return User::all();
+        $value =Cache::remember('users',3600, function () {
+            return DB::table('users')->get();
+            //return User::all();
         });
         
         $user = User::where('email', $request->email)->first();
@@ -162,15 +165,31 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/logout",
+     *   summary="logout",
+     *   description=" logout ",
+     *  @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"token",},
+     *               @OA\Property(property="token", type="string"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="User successfully signed out"),
+     * )
+     */
     public function logout() 
     {
         auth()->logout();
         return response()->json(['message' => 'User successfully signed out'],201);
-        
-        
+          
     }
-
-    
 
     /**
      * Get the token array structure.
