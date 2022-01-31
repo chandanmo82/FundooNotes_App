@@ -424,6 +424,24 @@
                 ]
             }
         },
+        "/api/auth/paginatenote": {
+            "get": {
+                "summary": "Display Paginate Notes",
+                "description": " Display Paginate Notes ",
+                "operationId": "d700b4b9e434e1fcedd85c28f136ec8a",
+                "requestBody": {},
+                "responses": {
+                    "201": {
+                        "description": "Pagination aplied to all Notes"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
         "/api/auth/register": {
             "post": {
                 "summary": "register",

@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Exceptions\FundooNoteException;
 
 
 
@@ -18,13 +20,14 @@ use App\Models\User;
  */
 class UserController extends Controller
 {
-    
+
     /**
      * Create a new AuthController instance.
      *
      * @return void
      */
-    public function __construct() {
+    public function __construct()
+    {
         $this->middleware('auth:api', ['except' => ['login', 'register']]);
     }
     /**
@@ -58,7 +61,7 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function register(Request $request) 
+    public function register(Request $request)
     {
 
         $validator = Validator::make($request->all(), [
@@ -69,28 +72,28 @@ class UserController extends Controller
             'confirm_password' => 'required|same:password',
         ]);
 
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
+        try {
+            $user = User::where('email', $request->email)->first();
+            if ($user) {
+                throw new FundooNoteException("The email has already been taken", 401);
+            }
 
-        $user = User::where('email', $request->email)->first();
-        if ($user)
-        {
-            return response()->json(['message' => 'The email has already been taken'],401);
-        }
-
-        $user = User::create([
-            'firstname' => $request->firstname,
-            'lastname' => $request->lastname,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
+            $user = User::create([
+                'firstname' => $request->firstname,
+                'lastname' => $request->lastname,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
             ]);
-        Cache::put('firstname' ,'Chandan',$seconds = 10);
-        Cache::put('lastname' ,'Mohanty',$seconds = 10);
-        Cache::put('email' ,'Chandan@gmail.com',$seconds = 10);
-        Cache::put('password' ,'chandan@123',$seconds = 10);    
-        $value = Cache::get('firstname');
+            $value = Cache::remember('users', 3600, function () {
+                return DB::table('users')->get();
+            });
+        } catch (FundooNoteException $e) {
+
+            return response()->json(['message' => $e->message(), 'status' => $e->statusCode()]);
+        }
 
         return response()->json([
             'message' => 'User successfully registered',
@@ -130,34 +133,30 @@ class UserController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
-        if ($validator->fails()) 
-        {
+        if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        $value =Cache::remember('users',3600, function () {
+        $value = Cache::remember('users', 3600, function () {
             return DB::table('users')->get();
-            //return User::all();
         });
-        
+
         $user = User::where('email', $request->email)->first();
-        if(!$user)
-        {
+        if (!$user) {
             Log::error('User failed to login.', ['id' => $request->email]);
             return response()->json([
-                     'message' => 'we can not find the user with that e-mail address You need to register first'
-                  ], 401);
+                'message' => 'we can not find the user with that e-mail address You need to register first'
+            ], 401);
         }
-         
-        if (!$token = auth()->attempt($validator->validated()))
-        {  
+
+        if (!$token = auth()->attempt($validator->validated())) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        Log::info('Login Success : '.'Email Id :'.$request->email ); 
-        return response()->json([ 
-            'message' => 'Login successfull',  
-            'access_token' => $token
-        ],200);
+        Log::info('Login Success : ' . 'Email Id :' . $request->email);
+        return response()->json([
+            'access_token' => $token,
+            'message' => 'Login successfull'
+        ], 200);
     }
 
     /**
@@ -184,11 +183,10 @@ class UserController extends Controller
      *   @OA\Response(response=201, description="User successfully signed out"),
      * )
      */
-    public function logout() 
+    public function logout()
     {
         auth()->logout();
-        return response()->json(['message' => 'User successfully signed out'],201);
-          
+        return response()->json(['message' => 'User successfully signed out'], 201);
     }
 
     /**

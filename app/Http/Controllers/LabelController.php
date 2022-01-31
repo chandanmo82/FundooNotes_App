@@ -9,10 +9,8 @@ use Illuminate\Http\Request;
 use App\Models\Label;
 use App\Models\LabelNote;
 use App\Exceptions\FundooNoteException;
-use Exception;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\Support\Facades\Auth;
 
 
 /**
@@ -55,29 +53,25 @@ class LabelController extends Controller
             'labelname' => 'required|string|between:2,15',
         ]);
 
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
 
         $currentUser = JWTAuth::parseToken()->authenticate();
-        if ($currentUser)
-        {
+        if ($currentUser) {
             $labelName = Label::where('labelname', $request->labelname)->first();
-            if ($labelName)
-            {
-                Log::alert('Label Created : ',['email'=>$request->email]);
-                return response()->json(['message' => 'Label Name already exists'],401);
+            if ($labelName) {
+                Log::alert('Label Created : ', ['email' => $request->email]);
+                return response()->json(['message' => 'Label Name already exists'], 401);
             }
-        
+
             $label = new Label;
             $label->labelname = $request->get('labelname');
             $value = Cache::remember('labels', 3600, function () {
                 return DB::table('labels')->get();
             });
-            
-            if($currentUser->labels()->save($label))
-            {
+
+            if ($currentUser->labels()->save($label)) {
                 return response()->json(['message' => 'Label added Sucessfully'], 201);
             }
             return response()->json(['message' => 'Could not add label'], 405);
@@ -122,43 +116,42 @@ class LabelController extends Controller
             'note_id' => 'required'
         ]);
 
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
-        }
-
-        $currentUser = JWTAuth::parseToken()->authenticate();
+        } 
         
-        if($currentUser)
-        {
+        $currentUser = JWTAuth::parseToken()->authenticate();
+
+        if ($currentUser) {
             $label_id = $request->input('label_id');
             $note_id = $request->input('note_id');
-            
+
             $label = $currentUser->labels()->find($label_id);
-    
-            if(!$label)
-            {
-                return response()->json([ 'message' => 'Label not Found'], 404);
+
+            if (!$label) {
+                return response()->json(['message' => 'Label not Found'], 404);
             }
 
             $note = $currentUser->notes()->find($note_id);
-    
-            if(!$note)
-            {
-                return response()->json([ 'message' => 'Notes not Found'], 404);
+
+            if (!$note) {
+                return response()->json(['message' => 'Notes not Found'], 404);
             }
+
             $labelNote = new LabelNote();
             $labelNote->note_id = $request->get('note_id');
             $labelNote->label_id = $request->get('label_id');
-            
-            if($currentUser->labelnote()->save($labelNote))
-            {
-                return response()->json([ 'message' => 'Label Added to Note Sucessfully' ], 201);
+            $notes = LabelNote::WHERE( 'note_id' ,$request->note_id)->where('label_id',$request->lebel_id);
+            if($notes){
+                return response()->json(['message' => 'label_id and note_id already exits']);
             }
-            return response()->json([ 'message' => 'Label Did Not added to Note' ], 403);
 
+            if ($currentUser->labelnote()->save($labelNote)) {
+                return response()->json(['message' => 'Label Added to Note Sucessfully'], 201);
+            }
+            return response()->json(['message' => 'Label Did Not added to Note'], 403);
         }
-        return response()->json([ 'message' => 'Invalid authorization token'], 404);
+        return response()->json(['message' => 'Invalid authorization token'], 404);
     }
 
     /**
@@ -184,21 +177,17 @@ class LabelController extends Controller
      */
     public function displayLabelById(Request $request)
     {
-        try
-        {
+        try {
             $User = JWTAuth::parseToken()->authenticate();
-            $labels = Label::where('user_id',$User->id)->get();
-            if($labels == '')
-            {
-                return response()->json([ 'message' => 'Label not found'], 404);
+            $labels = Label::where('user_id', $User->id)->get();
+            if ($labels == '') {
+                return response()->json(['message' => 'Label not found'], 404);
             }
-            if(!$labels){
-                throw new FundooNoteException("Invalid Authorization token ",404);
+            if (!$labels) {
+                throw new FundooNoteException("Invalid Authorization token ", 404);
             }
-        }
-        catch(FundooNoteException $e)
-        {
-            return response()->json(['message' => $e->message(),'status' => $e->statusCode() ]);
+        } catch (FundooNoteException $e) {
+            return response()->json(['message' => $e->message(), 'status' => $e->statusCode()]);
         }
         return response()->json([
             'label' => $labels
@@ -242,39 +231,33 @@ class LabelController extends Controller
             'id' => 'required',
             'labelname' => 'required|string|between:2,20',
         ]);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
-        try
-        {
+        try {
             $id = $request->input('id');
             $currentUser = JWTAuth::parseToken()->authenticate();
             $label = $currentUser->labels()->find($id);
-    
-            if(!$label)
-            {
-                Log::error('Label Not Found',['label_id'=>$request->id]);
-                return response()->json([ 'message' => 'Label not Found'], 404);
+
+            if (!$label) {
+                Log::error('Label Not Found', ['label_id' => $request->id]);
+                return response()->json(['message' => 'Label not Found'], 404);
             }
-    
+
             $label->fill($request->all());
             $value = Cache::remember('labels', 3600, function () {
                 return DB::table('labels')->get();
             });
-    
-            if($label->save())
-            {
-                Log::info('Label updated',['user_id'=>$currentUser,'label_id'=>$request->id]);
-                return response()->json(['message' => 'Label updated Sucessfully' ], 201);
+
+            if ($label->save()) {
+                Log::info('Label updated', ['user_id' => $currentUser, 'label_id' => $request->id]);
+                return response()->json(['message' => 'Label updated Sucessfully'], 201);
             }
-            if(!($label->save())){
-                throw new FundooNoteException("Invalid Authorization token ",404);
-            }      
-        }
-        catch(FundooNoteException $e)
-        {
-            return response()->json(['message' => $e->message(),'status' => $e->statusCode()]);
+            if (!($label->save())) {
+                throw new FundooNoteException("Invalid Authorization token ", 404);
+            }
+        } catch (FundooNoteException $e) {
+            return response()->json(['message' => $e->message(), 'status' => $e->statusCode()]);
         }
         return $label;
     }
@@ -314,38 +297,31 @@ class LabelController extends Controller
         $validator = Validator::make($request->all(), [
             'id' => 'required',
         ]);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
-        try
-        {
+        try {
             $id = $request->input('id');
             $currentUser = JWTAuth::parseToken()->authenticate();
             $label = $currentUser->labels()->find($id);
-    
-            if(!$label)
-            {
-                Log::error('Label Not Found',['label_id'=>$request->id]);
+
+            if (!$label) {
+                Log::error('Label Not Found', ['label_id' => $request->id]);
                 return response()->json(['message' => 'Label not Found'], 404);
             }
             $value = Cache::remember('labels', 3600, function () {
                 return DB::table('labels')->get();
             });
-    
-            if($label->delete())
-            {
-                Log::info('Label deleted',['user_id'=>$currentUser,'label_id'=>$request->id]);
+
+            if ($label->delete()) {
+                Log::info('Label deleted', ['user_id' => $currentUser, 'label_id' => $request->id]);
                 return response()->json(['message' => 'Label deleted Sucessfully'], 201);
             }
-            if(!($label->delete())){
-                throw new FundooNoteException("Invalid Authorization token ",404);
-            }   
-        }
-        catch(FundooNoteException $e)
-        {
-            return response()->json(['message' => $e->message(),'status' => $e->statusCode()]);
+            if (!($label->delete())) {
+                throw new FundooNoteException("Invalid Authorization token ", 404);
+            }
+        } catch (FundooNoteException $e) {
+            return response()->json(['message' => $e->message(), 'status' => $e->statusCode()]);
         }
     }
-
 }

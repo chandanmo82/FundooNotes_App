@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 namespace App\Http\Controllers;
+
 use App\Http\Requests\SendEmailRequest;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 class ForgotPasswordController extends Controller
 {
     //
-        /**
+    /**
      * This API Takes the request which is the email id and validates it and check where that email id 
      * is present in DB or not if it is not,it returns failure with the appropriate response code and 
      * checks for password reset model once the email is valid and by creating an object of the 
@@ -51,21 +52,18 @@ class ForgotPasswordController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user)
-        {
-            return response()->json([ 'message' => 'we can not find a user with that email address'],404);
-
+        if (!$user) {
+            return response()->json(['message' => 'we can not find a user with that email address'], 404);
         }
         $token = Auth::fromUser($user);
-        
-        if ($user) 
-        {
+
+        if ($user) {
             $sendEmail = new SendEmailRequest();
-            $sendEmail->sendEmail($user->email,$token);
+            $sendEmail->sendEmail($user->email, $token);
         }
 
-        Log::info('Forgot PassWord Link : '.'Email Id :'.$request->email );
-        return response()->json(['message' => 'password reset link genereted in mail'],200);
+        Log::info('Forgot PassWord Link : ' . 'Email Id :' . $request->email);
+        return response()->json(['message' => 'password reset link genereted in mail'], 200);
     }
 
     /**
@@ -76,7 +74,7 @@ class ForgotPasswordController extends Controller
      * 
      * 
      */
-        /**
+    /**
      * @OA\Post(
      *   path="/api/auth/resetpassword",
      *   summary="resetpassword",
@@ -107,33 +105,29 @@ class ForgotPasswordController extends Controller
             'confirm_password' => 'required|same:new_password'
         ]);
 
-        if ($validate->fails())
-        {
+        if ($validate->fails()) {
             return response()->json([
-                 'message' => "Password doesn't match"
-                ],400);
+                'message' => "Password doesn't match"
+            ], 400);
         }
         $user = Auth::user();
 
         $user = User::where('email', $user->email)->first();
 
-        if (!$user)
-        {
+        if (!$user) {
             Log::error('Email not found.', ['id' => $request->email]);
             return response()->json([
                 'message' => "we can't find the user with that e-mail address"
             ], 400);
-        }
-        else
-        {
+        } else {
             $user->password = bcrypt($request->new_password);
             $user->save();
-            Log::info('Reset Successful : '.'Email Id :'.$request->email );
-            
+            Log::info('Reset Successful : ' . 'Email Id :' . $request->email);
+
             return response()->json([
-                'status' => 201, 
+                'status' => 201,
                 'message' => 'Password reset successfull!'
-            ],201);
+            ], 201);
         }
     }
 }

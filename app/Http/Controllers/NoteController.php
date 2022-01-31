@@ -61,38 +61,34 @@ class NoteController extends Controller
             'description' => 'required|string|between:3,1000',
         ]);
 
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
 
-        try 
-		{
+        try {
             $note = new Note;
             $note->title = $request->input('title');
             $note->description = $request->input('description');
             $note->user_id = Auth::user()->id;
             $note->save();
-            if(!$note){
-                throw new FundooNoteException("Invalid Authorization token ",404); 
+            if (!$note) {
+                throw new FundooNoteException("Invalid Authorization token ", 404);
             }
             $value = Cache::remember('notes', 3600, function () {
                 return DB::table('notes')->get();
             });
-        } 
-		catch (FundooNoteException $e) 
-		{
+        } catch (FundooNoteException $e) {
             Log::error('Invalid User');
             return response()->json([
-                'status' => $e->statusCode(), 
+                'status' => $e->statusCode(),
                 'message' => $e->message()
             ]);
         }
 
-        Log::info('notes created',['user_id'=>$note->user_id]);
+        Log::info('notes created', ['user_id' => $note->user_id]);
         return response()->json([
-		'status' => 201, 
-		'message' => 'notes created successfully'
+            'status' => 201,
+            'message' => 'notes created successfully'
         ]);
     }
 
@@ -117,33 +113,36 @@ class NoteController extends Controller
      * "Bearer" : {}}}
      * )
      */
-    public function displayNoteById(Request $request)
+
+    public function displayNoteById()
     {
 
-        try
-        {
-            //$id = $request->input('id');
-            $User = JWTAuth::parseToken()->authenticate();
+        try {
+            $currentUser = JWTAuth::parseToken()->authenticate();
 
             $value = Cache::remember('notes', 3600, function () {
                 return DB::table('notes')->get();
             });
-            
-            $notes = Note::where('user_id' , $User->id)->get();
-            if($notes == '')
-            {
-                return response()->json([ 'message' => 'Notes not found'], 404);
+
+
+            if ($currentUser) {
+                $user = Note::leftJoin('labelnote', 'labelnote.note_id', '=', 'notes.id')->leftJoin('labels', 'labels.id', '=', 'labelnote.label_id')
+                    ->select('notes.id', 'notes.title', 'notes.description', 'labels.labelname')
+                    ->where('notes.user_id', '=', $currentUser->id)->get();
+
+                if ($user == '[]') {
+                    return response()->json(['message' => 'Notes not found'], 404);
+                }
+                return response()->json([
+                    'message' => 'All  Notes are Fetched Successfully',
+                    'notes' => $user
+
+                ], 201);
             }
-            if(!$notes){
-                throw new FundooNoteException("Invalid Authorization token ",404);
-            }
+            throw new FundooNoteException("Invalid Authorization token ", 404);
+        } catch (FundooNoteException $e) {
+            return response()->json(['message' => $e->message(), 'status' => $e->statusCode()]);
         }
-        catch(FundooNoteException $e)
-        {
-            return response()->json(['message' => $e->message(),'status' => $e->statusCode()]);
-        }
-        
-        return $notes;
     }
 
     /**
@@ -185,39 +184,33 @@ class NoteController extends Controller
             'title' => 'string|between:2,30',
             'description' => 'string|between:3,1000',
         ]);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
-        try
-        {
+        try {
             $id = $request->input('id');
             $currentUser = JWTAuth::parseToken()->authenticate();
             $note = $currentUser->notes()->find($id);
             $value = Cache::remember('notes', 3600, function () {
                 return DB::table('notes')->get();
             });
-    
-            if(!$note)
-            {
-                Log::error('Notes Not Found',['id'=>$request->id]);
-                return response()->json([ 'message' => 'Notes not Found'], 404);
+
+            if (!$note) {
+                Log::error('Notes Not Found', ['id' => $request->id]);
+                return response()->json(['message' => 'Notes not Found'], 404);
             }
-    
+
             $note->fill($request->all());
-    
-            if($note->save())
-            {
-                Log::info('notes updated',['user_id'=>$currentUser,'note_id'=>$request->id]);
-                return response()->json(['message' => 'Note updated Sucessfully' ], 201);
-            } 
-            if(!($note->save())){
-                throw new FundooNoteException("Invalid Authorization token ",404);
-            }     
-        }
-        catch(FundooNoteException $e)
-        {
-            return response()->json(['message' => $e->message(),'status' => $e->statusCode()]);
+
+            if ($note->save()) {
+                Log::info('notes updated', ['user_id' => $currentUser, 'note_id' => $request->id]);
+                return response()->json(['message' => 'Note updated Sucessfully'], 201);
+            }
+            if (!($note->save())) {
+                throw new FundooNoteException("Invalid Authorization token ", 404);
+            }
+        } catch (FundooNoteException $e) {
+            return response()->json(['message' => $e->message(), 'status' => $e->statusCode()]);
         }
     }
 
@@ -256,49 +249,58 @@ class NoteController extends Controller
         $validator = Validator::make($request->all(), [
             'id' => 'required',
         ]);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
-        try
-        {
+        try {
             $id = $request->input('id');
             $currentUser = JWTAuth::parseToken()->authenticate();
             $note = $currentUser->notes()->find($id);
             $value = Cache::remember('notes', 3600, function () {
                 return DB::table('notes')->get();
             });
-    
-            if(!$note)
-            {
-                Log::error('Notes Not Found',['id'=>$request->id]);
+
+            if (!$note) {
+                Log::error('Notes Not Found', ['id' => $request->id]);
                 return response()->json(['message' => 'Notes not Found'], 404);
             }
-    
-            if($note->delete())
-            {
-                Log::info('notes deleted',['user_id'=>$currentUser,'note_id'=>$request->id]);
+
+            if ($note->delete()) {
+                Log::info('notes deleted', ['user_id' => $currentUser, 'note_id' => $request->id]);
                 return response()->json(['message' => 'Note deleted Sucessfully'], 201);
             }
-            if(!($note->delete())){
-                throw new FundooNoteException("Invalid Authorization token ",404);
-            }   
+            if (!($note->delete())) {
+                throw new FundooNoteException("Invalid Authorization token ", 404);
+            }
+        } catch (FundooNoteException $e) {
+            return response()->json(['message' => $e->message(), 'status' => $e->statusCode()]);
         }
-        catch(FundooNoteException $e)
-        {
-            return response()->json(['message' => $e->message(),'status' => $e->statusCode() ]);
-        }
-        
     }
-
+    /**
+     * Functio used to view all notes
+     * ie; 3 notes per page wise  will be displayed.
+     */
+    /**
+     * @OA\Get(
+     *   path="/api/auth/paginatenote",
+     *   summary="Display Paginate Notes",
+     *   description=" Display Paginate Notes ",
+     *   @OA\RequestBody(
+     *         
+     *    ),
+     *   @OA\Response(response=201, description="Pagination aplied to all Notes"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
     public function paginationNote()
     {
-        $allNotes = Note::paginate(3); 
+        $allNotes = Note::paginate(3);
 
         return response()->json([
             'message' => 'Pagination aplied to all Notes',
             'notes' =>  $allNotes,
         ], 201);
     }
-    
-}   
+}
