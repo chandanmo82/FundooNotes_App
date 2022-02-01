@@ -127,7 +127,7 @@ class NoteController extends Controller
 
             if ($currentUser) {
                 $user = Note::leftJoin('labelnote', 'labelnote.note_id', '=', 'notes.id')->leftJoin('labels', 'labels.id', '=', 'labelnote.label_id')
-                    ->select('notes.id', 'notes.title', 'notes.description', 'labels.labelname')
+                    ->select('notes.id', 'notes.title', 'notes.description','notes.pin','notes.archive','notes.colour', 'labels.labelname')
                     ->where('notes.user_id', '=', $currentUser->id)->get();
 
                 if ($user == '[]') {
@@ -302,5 +302,209 @@ class NoteController extends Controller
             'message' => 'Pagination aplied to all Notes',
             'notes' =>  $allNotes,
         ], 201);
+    }
+    /**
+     * This function takes the User access token and checks if it 
+     * authorised or not and it takes the note_id and pins  it 
+     * successfully if notes is exist.  
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/pinnote",
+     *   summary="Pin Note",
+     *   description=" Pin Note ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"id"},
+     *               @OA\Property(property="id", type="integer"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="Note Pinned Sucessfully"),
+     *   @OA\Response(response=404, description="Notes not Found"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
+    public function pinNoteById(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        $id = $request->input('id');
+        $currentUser = JWTAuth::parseToken()->authenticate();
+        $note = $currentUser->notes()->find($id);
+
+        if (!$note) {
+            Log::error('Notes Not Found', ['user' => $currentUser, 'id' => $request->id]);
+            return response()->json(['message' => 'Notes not Found'], 404);
+        }
+
+        if ($note->pin == 0) {
+            $user = Note::where('id', $request->id)
+                ->update(['pin' => 1]);
+
+            Log::info('notes Pinned', ['user_id' => $currentUser, 'note_id' => $request->id]);
+            return response()->json(['message' => 'Note Pinned Sucessfully'], 201);
+        }
+
+        /*$user = Note::where('id', $request->id)
+                         ->update(['pin' => 0]);
+
+        Log::info('notes UnPinned',['user_id'=>$currentUser,'note_id'=>$request->id]);
+        return response()->json(['message' => 'Note UnPinned ' ], 201);
+        */
+    }
+    /**
+     * This function takes the User access token and checks if it 
+     * authorised or not and it takes the note_id and Archives it 
+     * successfully if notes exist.  
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/archivenote",
+     *   summary="Archive Note",
+     *   description=" Archive Note ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"id"},
+     *               @OA\Property(property="id", type="integer"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="Note Archived Sucessfully"),
+     *   @OA\Response(response=404, description="Notes not Found"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
+    public function archiveNoteById(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        $id = $request->input('id');
+        $currentUser = JWTAuth::parseToken()->authenticate();
+        $note = $currentUser->notes()->find($id);
+
+        if (!$note) {
+            Log::error('Notes Not Found', ['user' => $currentUser, 'id' => $request->id]);
+            return response()->json(['message' => 'Notes not Found'], 404);
+        }
+
+        if ($note->Archive == 0) {
+            $user = Note::where('id', $request->id)
+                ->update(['archive' => 1]);
+
+            Log::info('notes Archived', ['user_id' => $currentUser, 'note_id' => $request->id]);
+            return response()->json(['message' => 'Note Archived Sucessfully'], 201);
+        }
+
+        /*$user = Note::where('id', $request->id)
+                         ->update(['archive' => 0]);
+
+        Log::info('notes UnArchived',['user_id'=>$currentUser,'note_id'=>$request->id]);
+        return response()->json(['message' => 'Note UnArchived ' ], 201);
+        */
+    }
+
+    /**
+     * This function takes the User access token and checks if it 
+     * authorised or not and it takes the note_id and colours it 
+     * successfully if notes exist.  
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/colournote",
+     *   summary="Colour Note",
+     *   description=" Colour Note ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"id" , "colour"},
+     *               @OA\Property(property="id", type="integer"),
+     *               @OA\Property(property="colour", type="string"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="Note coloured Sucessfully"),
+     *   @OA\Response(response=404, description="Notes not Found"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
+    public function colourNoteById(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'colour' => 'required'
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        $id = $request->input('id');
+        $currentUser = JWTAuth::parseToken()->authenticate();
+        $note = $currentUser->notes()->find($id);
+
+        if (!$note) {
+            Log::error('Notes Not Found', ['user' => $currentUser, 'id' => $request->id]);
+            return response()->json(['message' => 'Notes not Found'], 404);
+        }
+
+        $colours  =  array(
+            'green' => 'rgb(0,255,0)',
+            'red' => 'rgb(255,0,0)',
+            'blue' => 'rgb(0,0,255)',
+            'yellow' => 'rgb(255,255,0)',
+            'grey' => 'rgb(128,128,128)',
+            'purple' => 'rgb(128,0,128)',
+            'brown' => 'rgb(165,42,42)',
+            'orange' => 'rgb(255,165,0)',
+            'pink' => 'rgb(255,192,203)',
+            'black' => 'rgb(0,0,0)',
+            'silver' => 'rgb(192,192,192)',
+            'teal' => 'rgb(0,128,128)'
+        );
+
+        $colour_name = strtolower($request->colour);
+
+        if (isset($colours[$colour_name])) {
+            $user = Note::where('id', $request->id)
+                ->update(['colour' => $colours[$colour_name]]);
+
+            Log::info('notes coloured', ['user_id' => $currentUser, 'note_id' => $request->id]);
+            return response()->json(['message' => 'Note coloured Sucessfully'], 201);
+        } else {
+            return response()->json(['message' => 'Colour Not Specified in the List'], 400);
+        }
     }
 }

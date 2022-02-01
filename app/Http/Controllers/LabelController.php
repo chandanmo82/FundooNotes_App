@@ -123,25 +123,11 @@ class LabelController extends Controller
         $currentUser = JWTAuth::parseToken()->authenticate();
 
         if ($currentUser) {
-            $label_id = $request->input('label_id');
-            $note_id = $request->input('note_id');
-
-            $label = $currentUser->labels()->find($label_id);
-
-            if (!$label) {
-                return response()->json(['message' => 'Label not Found'], 404);
-            }
-
-            $note = $currentUser->notes()->find($note_id);
-
-            if (!$note) {
-                return response()->json(['message' => 'Notes not Found'], 404);
-            }
-
+            
             $labelNote = new LabelNote();
             $labelNote->note_id = $request->get('note_id');
             $labelNote->label_id = $request->get('label_id');
-            $notes = LabelNote::WHERE( 'note_id' ,$request->note_id)->where('label_id',$request->lebel_id);
+            $notes = LabelNote::where( 'note_id' ,$request->note_id)->where('label_id',$request->lebel_id)->first();
             if($notes){
                 return response()->json(['message' => 'label_id and note_id already exits']);
             }

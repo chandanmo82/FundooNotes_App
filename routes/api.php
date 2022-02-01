@@ -45,5 +45,9 @@ Route::group([
     Route::get('displaylable', [LabelController::class, 'displayLabelById']);
     Route::post('updatelable', [LabelController::class, 'updateLabelById']);
     Route::post('deletelable', [LabelController::class, 'deleteLabelById']);
+
+    Route::post('pinnote', [NoteController::class, 'pinNoteById']);
+    Route::post('archivenote', [NoteController::class, 'archiveNoteById']);
+    Route::post('colournote', [NoteController::class, 'colourNoteById']);
   
 }); 

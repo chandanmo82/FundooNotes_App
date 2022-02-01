@@ -442,6 +442,130 @@
                 ]
             }
         },
+        "/api/auth/pinnote": {
+            "post": {
+                "summary": "Pin Note",
+                "description": " Pin Note ",
+                "operationId": "ce45f0736d3596d7ef7b7a9e3c90b651",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "id"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {}
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Note Pinned Sucessfully"
+                    },
+                    "404": {
+                        "description": "Notes not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/archivenote": {
+            "post": {
+                "summary": "Archive Note",
+                "description": " Archive Note ",
+                "operationId": "4a8827636be8493c8ac44d844108108d",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "id"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {}
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Note Archived Sucessfully"
+                    },
+                    "404": {
+                        "description": "Notes not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/colournote": {
+            "post": {
+                "summary": "Colour Note",
+                "description": " Colour Note ",
+                "operationId": "6ee21fbd1fbdb6ea8f8517fe7a94813d",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "id",
+                                    "colour"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "integer"
+                                    },
+                                    "colour": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {}
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Note coloured Sucessfully"
+                    },
+                    "404": {
+                        "description": "Notes not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
         "/api/auth/register": {
             "post": {
                 "summary": "register",
