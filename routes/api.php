@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\LabelController;
+use App\Http\Controllers\CollaboratorController;
 
 
 
@@ -47,7 +48,16 @@ Route::group([
     Route::post('deletelable', [LabelController::class, 'deleteLabelById']);
 
     Route::post('pinnote', [NoteController::class, 'pinNoteById']);
+    Route::get('getpinnednote', [NoteController::class, 'getAllPinnedNotes']);
     Route::post('archivenote', [NoteController::class, 'archiveNoteById']);
+    Route::get('getarchivednote', [NoteController::class, 'getAllArchivedNotes']);
     Route::post('colournote', [NoteController::class, 'colourNoteById']);
+
+    Route::post('addcollab', [CollaboratorController::class, 'addCollaboratorByNoteId']);
+    Route::post('editcollabnote', [CollaboratorController::class, 'updateNoteByCollaborator']);
+    Route::post('removecollab', [CollaboratorController::class, 'removeCollaborator']);
+    Route::get('getallcollab', [CollaboratorController::class, 'getAllCollaborators']);
+
+    Route::post('searchnotes', [NoteController::class, 'searchAllNotes']);
   
 }); 

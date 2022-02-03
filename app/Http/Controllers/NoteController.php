@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Note;
 use App\Exceptions\FundooNoteException;
-use Exception;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Auth;
@@ -126,9 +125,9 @@ class NoteController extends Controller
 
 
             if ($currentUser) {
-                $user = Note::leftJoin('labelnote', 'labelnote.note_id', '=', 'notes.id')->leftJoin('labels', 'labels.id', '=', 'labelnote.label_id')
-                    ->select('notes.id', 'notes.title', 'notes.description','notes.pin','notes.archive','notes.colour', 'labels.labelname')
-                    ->where('notes.user_id', '=', $currentUser->id)->get();
+                $user = Note::leftJoin('collaborators', 'collaborators.note_id', '=', 'notes.id')->leftJoin('labelnote', 'labelnote.note_id', '=', 'notes.id')->leftJoin('labels', 'labels.id', '=', 'labelnote.label_id')
+                    ->select('notes.id', 'notes.title', 'notes.description', 'notes.pin', 'notes.archive', 'notes.colour', 'collaborators.email as Collaborator', 'labels.labelname')
+                    ->where('notes.user_id', '=', $currentUser->id)->orWhere('collaborators.email', '=', $currentUser->email)->get();
 
                 if ($user == '[]') {
                     return response()->json(['message' => 'Notes not found'], 404);
@@ -358,14 +357,52 @@ class NoteController extends Controller
             Log::info('notes Pinned', ['user_id' => $currentUser, 'note_id' => $request->id]);
             return response()->json(['message' => 'Note Pinned Sucessfully'], 201);
         }
-
-        /*$user = Note::where('id', $request->id)
-                         ->update(['pin' => 0]);
-
-        Log::info('notes UnPinned',['user_id'=>$currentUser,'note_id'=>$request->id]);
-        return response()->json(['message' => 'Note UnPinned ' ], 201);
-        */
     }
+    /**
+     * This function takes the User access token and checks if it 
+     * authorised or not if so, it returns all the pinned notes 
+     * successfully.  
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * @OA\Get(
+     *   path="/api/auth/getpinnednote",
+     *   summary="Display All Pinned Notes",
+     *   description=" Display All Pinned Notes ",
+     *   @OA\RequestBody(
+     *         
+     *    ),
+     *   @OA\Response(response=404, description="Invalid token"),
+     *   @OA\Response(response=201, description="Fetched Pinned Notes Successfully"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
+    public function getAllPinnedNotes()
+    {
+        $notes = new Note();
+        $notes->user_id = auth()->id();
+        $currentUser = JWTAuth::parseToken()->authenticate();
+
+        if ($notes->user_id == auth()->id()) {
+            $usernotes = Note::leftJoin('collaborators', 'collaborators.note_id', '=', 'notes.id')->leftJoin('labelnote', 'labelnote.note_id', '=', 'notes.id')->leftJoin('labels', 'labels.id', '=', 'labelnote.label_id')
+                ->select('notes.id', 'notes.title', 'notes.description', 'notes.pin', 'notes.archive', 'notes.colour', 'collaborators.email as Collaborator', 'labels.labelname')
+                ->where([['notes.user_id', '=', $currentUser->id], ['pin', '=', 1]])->orWhere('collaborators.email', '=', $currentUser->email)->get();
+
+
+            if ($usernotes == '[]') {
+                return response()->json(['message' => 'Notes not found'], 404);
+            }
+            return response()->json([
+                'message' => 'Fetched Pinned Notes Successfully',
+                'notes' => $usernotes
+            ], 201);
+        }
+        return response()->json(['message' => 'Invalid token'], 403);
+    }
+
     /**
      * This function takes the User access token and checks if it 
      * authorised or not and it takes the note_id and Archives it 
@@ -421,13 +458,49 @@ class NoteController extends Controller
             Log::info('notes Archived', ['user_id' => $currentUser, 'note_id' => $request->id]);
             return response()->json(['message' => 'Note Archived Sucessfully'], 201);
         }
+    }
+    /**
+     * This function takes the User access token and checks if it 
+     * authorised or not if so, it returns all the Archived notes 
+     * successfully.  
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * @OA\Get(
+     *   path="/api/auth/getarchivednote",
+     *   summary="Display All Archived Notes",
+     *   description=" Display All Archived Notes ",
+     *   @OA\RequestBody(
+     *         
+     *    ),
+     *   @OA\Response(response=404, description="Invalid token"),
+     *   @OA\Response(response=201, description="Fetched Archived Notes"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
+    public function getAllArchivedNotes()
+    {
+        $notes = new Note();
+        $notes->user_id = auth()->id();
+        $currentUser = JWTAuth::parseToken()->authenticate();
 
-        /*$user = Note::where('id', $request->id)
-                         ->update(['archive' => 0]);
+        if ($notes->user_id == auth()->id()) {
+            $usernotes = Note::leftJoin('collaborators', 'collaborators.note_id', '=', 'notes.id')->leftJoin('labelnote', 'labelnote.note_id', '=', 'notes.id')->leftJoin('labels', 'labels.id', '=', 'labelnote.label_id')
+                ->select('notes.id', 'notes.title', 'notes.description', 'notes.pin', 'notes.archive', 'notes.colour', 'collaborators.email as Collaborator', 'labels.labelname')
+                ->where([['notes.user_id', '=', $currentUser->id], ['archive', '=', 1]])->orWhere('collaborators.email', '=', $currentUser->email)->get();
 
-        Log::info('notes UnArchived',['user_id'=>$currentUser,'note_id'=>$request->id]);
-        return response()->json(['message' => 'Note UnArchived ' ], 201);
-        */
+            if ($usernotes == '[]') {
+                return response()->json(['message' => 'Notes not found'], 404);
+            }
+            return response()->json([
+                'message' => 'Fetched Archived Notes',
+                'notes' => $usernotes
+            ], 201);
+        }
+        return response()->json(['message' => 'Invalid token'], 403);
     }
 
     /**
@@ -506,5 +579,70 @@ class NoteController extends Controller
         } else {
             return response()->json(['message' => 'Colour Not Specified in the List'], 400);
         }
+    }
+    /**
+     * This function takes the User access token and search key to search
+     * if the access token is valid it returns all the notes which has given
+     * search key for that particular user.
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * @OA\Post(
+     *   path="/api/auth/searchnotes",
+     *   summary="Search Note",
+     *   description=" Search Note ",
+     *   @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"search"},
+     *               @OA\Property(property="search", type="string"),
+     *            ),
+     *        ),
+     *    ),
+     *   @OA\Response(response=201, description="Note Fetched Sucessfully"),
+     *   @OA\Response(response=404, description="Notes not Found"),
+     *   security = {
+     * {
+     * "Bearer" : {}}}
+     * )
+     */
+    public function searchAllNotes(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'search' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        $searchKey = $request->input('search');
+        $currentUser = JWTAuth::parseToken()->authenticate();
+
+        if ($currentUser) {
+
+            $usernotes = Note::leftJoin('collaborators', 'collaborators.note_id', '=', 'notes.id')->leftJoin('labelnote', 'labelnote.note_id', '=', 'notes.id')->leftJoin('labels', 'labels.id', '=', 'labelnote.label_id')
+                ->select('notes.id', 'notes.title', 'notes.description', 'notes.pin', 'notes.archive', 'notes.colour', 'collaborators.email as Collaborator', 'labels.labelname')
+                ->where('notes.user_id', '=', $currentUser->id)->Where('notes.title', 'like', '%' . $searchKey . '%')
+                ->orWhere('notes.user_id', '=', $currentUser->id)->Where('notes.description', 'like', '%' . $searchKey . '%')
+                ->orWhere('notes.user_id', '=', $currentUser->id)->Where('labels.labelname', 'like', '%' . $searchKey . '%')
+                ->orWhere('collaborators.email', '=', $currentUser->email)->Where('notes.title', 'like', '%' . $searchKey . '%')
+                ->orWhere('collaborators.email', '=', $currentUser->email)->Where('notes.description', 'like', '%' . $searchKey . '%')
+                ->orWhere('collaborators.email', '=', $currentUser->email)->Where('labels.labelname', 'like', '%' . $searchKey . '%')
+                ->get();
+
+            if ($usernotes == '[]') {
+                return response()->json(['message' => 'No results'], 404);
+            }
+            return response()->json([
+                'message' => 'Fetched Notes Successfully',
+                'notes' => $usernotes
+            ], 201);
+        }
+        return response()->json(['message' => 'Invalid authorization token'], 403);
     }
 }

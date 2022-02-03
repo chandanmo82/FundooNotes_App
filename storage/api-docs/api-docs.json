@@ -9,6 +9,163 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/auth/addcollab": {
+            "post": {
+                "summary": "Add Colaborator to specific Note ",
+                "description": " Add Colaborator to specific Note ",
+                "operationId": "c6fe03c69a8190f3747cf86ac625b70a",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "note_id"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "note_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {}
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Collaborator created Sucessfully"
+                    },
+                    "404": {
+                        "description": "Invalid authorization token"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/editcollabnote": {
+            "post": {
+                "summary": "Edit the note through Colaborator ",
+                "description": " Edit the note through Colaborator",
+                "operationId": "7ff1fce678dc5313a3dbfdfa162334f0",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "note_id",
+                                    "description"
+                                ],
+                                "properties": {
+                                    "note_id": {
+                                        "type": "integer"
+                                    },
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {}
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Note updated Sucessfully"
+                    },
+                    "404": {
+                        "description": "Invalid authorization token"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/removecollab": {
+            "post": {
+                "summary": "Remove Colaborator from specific Note ",
+                "description": " Remove Colaborator from specific Note ",
+                "operationId": "783ef7dcf864d305843f575217dbb01c",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "note_id"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "note_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {}
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Collaborator deleted Sucessfully"
+                    },
+                    "404": {
+                        "description": "Collaborater Not created"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/getallcollab": {
+            "get": {
+                "summary": "Display all Colaborators",
+                "description": " Display all Colaborators ",
+                "operationId": "21e3c5631a203661d2f728e57d96321c",
+                "requestBody": {},
+                "responses": {
+                    "201": {
+                        "description": "Fetched Collaborators Successfully"
+                    },
+                    "404": {
+                        "description": "Invalid authorization token"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
         "/api/auth/forgotpassword": {
             "post": {
                 "summary": "forgotpassword",
@@ -482,6 +639,27 @@
                 ]
             }
         },
+        "/api/auth/getpinnednote": {
+            "get": {
+                "summary": "Display All Pinned Notes",
+                "description": " Display All Pinned Notes ",
+                "operationId": "a8771f31545ee2185ea7dc61d26a84cd",
+                "requestBody": {},
+                "responses": {
+                    "404": {
+                        "description": "Invalid token"
+                    },
+                    "201": {
+                        "description": "Fetched Pinned Notes Successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
         "/api/auth/archivenote": {
             "post": {
                 "summary": "Archive Note",
@@ -513,6 +691,27 @@
                     },
                     "404": {
                         "description": "Notes not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/getarchivednote": {
+            "get": {
+                "summary": "Display All Archived Notes",
+                "description": " Display All Archived Notes ",
+                "operationId": "120379d81da143151481a780905169e4",
+                "requestBody": {},
+                "responses": {
+                    "404": {
+                        "description": "Invalid token"
+                    },
+                    "201": {
+                        "description": "Fetched Archived Notes"
                     }
                 },
                 "security": [
@@ -554,6 +753,46 @@
                 "responses": {
                     "201": {
                         "description": "Note coloured Sucessfully"
+                    },
+                    "404": {
+                        "description": "Notes not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/searchnotes": {
+            "post": {
+                "summary": "Search Note",
+                "description": " Search Note ",
+                "operationId": "bd0e6b5b7bdac4c2ac07ecd2b3bf27d1",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "search"
+                                ],
+                                "properties": {
+                                    "search": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {}
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Note Fetched Sucessfully"
                     },
                     "404": {
                         "description": "Notes not Found"
