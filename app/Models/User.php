@@ -33,6 +33,13 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'remember_token',
     ];
+    public function setFirstnameAttribute($value) {
+         $this->attributes['firstname'] = ucfirst($value);
+    }
+
+    public function getLastnameAttribute($value) {
+        return $this->attributes['lastname'] = ucfirst($value);
+    }
 
     /**
      * The attributes that should be cast.

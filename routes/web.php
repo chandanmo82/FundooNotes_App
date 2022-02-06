@@ -1,5 +1,7 @@
 <?php
 
+use App\Mail\SendTestMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 
@@ -15,6 +17,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    dispatch(function(){
+        Mail::to("chandanmohantydon82@gmail.com")->send(new SendTestMail());
+    })->delay(now()->addSeconds(5));
+    
+    //return view('welcome');
+    echo "Mail Sent"; 
 });
 

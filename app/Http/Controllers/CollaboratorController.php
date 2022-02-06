@@ -244,7 +244,7 @@ class CollaboratorController extends Controller
             {
                 return response()->json(['message' => 'Collaborator deleted Sucessfully' ], 201);
             }
-            return response()->json(['message' => 'Collaborator could not deleted' ], 201);      
+            return response()->json(['message' => 'Collaborator could not deleted' ], 404);      
         }
     }
     /**

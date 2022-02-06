@@ -351,6 +351,10 @@ class NoteController extends Controller
         }
 
         if ($note->pin == 0) {
+            if($note->archive == 1){
+                $user = Note::where('id', $request->id)
+                    ->update(['archive' => 0]);
+            }
             $user = Note::where('id', $request->id)
                 ->update(['pin' => 1]);
 
@@ -451,7 +455,11 @@ class NoteController extends Controller
             return response()->json(['message' => 'Notes not Found'], 404);
         }
 
-        if ($note->Archive == 0) {
+        if ($note->archive == 0) {
+            if($note->pin == 1){
+                $user = Note::where('id', $request->id)
+                    ->update(['pin' => 0]);
+            }
             $user = Note::where('id', $request->id)
                 ->update(['archive' => 1]);
 
