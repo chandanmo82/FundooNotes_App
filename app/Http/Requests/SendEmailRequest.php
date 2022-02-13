@@ -63,7 +63,7 @@ class SendEmailRequest
         $name = 'Chandan Kumar';
         $email = $email;
         $subject = 'Note shared with you:';
-        $data = $currentUserEmail.' shared a Note with you <br>'.$data;
+        $data = $name.' shared a Note with you <br>'.$data;
           
         $mail = new PHPMailer(true);
 

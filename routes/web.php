@@ -17,11 +17,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    dispatch(function(){
+   /* dispatch(function(){
         Mail::to("chandanmohantydon82@gmail.com")->send(new SendTestMail());
-    })->delay(now()->addSeconds(5));
+    })->delay(now()->addSeconds(5));*/
     
-    //return view('welcome');
-    echo "Mail Sent"; 
+    return view('welcome');
+    //echo "Mail Sent"; 
 });
 

@@ -9,8 +9,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Exceptions\FundooNoteException;
-
-
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 /**
  * @since 2-jan-2022
@@ -28,7 +30,7 @@ class UserController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'addProfileImage']]);
     }
     /**
      * @OA\Post(
@@ -200,5 +202,35 @@ class UserController extends Controller
         return response()->json([
             'access_token' => $token,
         ]);
+    }
+    /**
+     * This function will take image
+     * as input and save in AWS S3 
+     * and will save link in database
+     * @return \Illuminate\Http\JsonResponse
+     */
+
+    public function addProfileImage(Request $request)
+    {
+        $request->validate([
+
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+
+        ]);
+        $user = Auth::user();
+
+        $user = User::where('email', $user->email)->first();
+        if ($user) {
+            $imageName = time() . '.' . $request->image->extension();
+
+            $path = Storage::disk('s3')->put('images', $request->image);
+            $url = env('AWS_URL') . $path;
+            $temp = User::where('email', $user->email)
+                ->update(['profilepic' => $url]);
+            return response()->json(['message' => 'Profilepic Successsfully Added', 'URL' => $url], 201);
+            
+        } else {
+            return response()->json(['message' => 'We cannot find a user'], 400);
+        }
     }
 }

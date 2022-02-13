@@ -32,6 +32,8 @@ Route::group([
     Route::post('login', [UserController::class, 'login']);
     Route::post('register', [UserController::class, 'register']);
     Route::post('logout', [UserController::class, 'logout']);
+    Route::post('addimage', [UserController::class, 'addProfileImage']);
+
     Route::post('forgotpassword', [ForgotPasswordController::class, 'forgotPassword']);
     Route::post('resetpassword', [ForgotPasswordController::class, 'resetPassword']);
 

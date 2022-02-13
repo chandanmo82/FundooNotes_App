@@ -16,12 +16,12 @@ class NoteControllerTest extends TestCase
     {
         $response = $this->withHeaders([
             'Content-Type' => 'Application/json',
-            'Authorization' => 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xMjcuMC4wLjE6ODAwMFwvYXBpXC9hdXRoXC9sb2dpbiIsImlhdCI6MTY0MjQ4NjUxMywiZXhwIjoxNjQyNDkwMTEzLCJuYmYiOjE2NDI0ODY1MTMsImp0aSI6InloR2w3MGdIUGk1dldTR0kiLCJzdWIiOjksInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.ez6jbebrIeC3suoh96VZhwwh9x8Wb1ktEKjj0IPKab0'
+            'Authorization' => 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xMjcuMC4wLjE6ODAwMFwvYXBpXC9hdXRoXC9sb2dpbiIsImlhdCI6MTY0NDYzODcyMSwiZXhwIjoxNjQ0NjQyMzIxLCJuYmYiOjE2NDQ2Mzg3MjEsImp0aSI6InJ2ZGdEd3E2bkRoMTBhWmwiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.0YawnQa2rL6YyPu0Fg3tFcCgA1NFpSiDdfdfkEp5Hlc'
         ])->json(
             'POST',
             '/api/auth/createnote',
             [
-                "title" => "fyyyy",
+                "title" => "saturday",
                 "description" => "phppp",
             ]
         );

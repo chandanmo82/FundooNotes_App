@@ -19,7 +19,7 @@ class SendTestMail extends Mailable
      */
     public function __construct()
     {
-        $this->name = "Chandan";
+
     }
 
     /**
@@ -27,8 +27,12 @@ class SendTestMail extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build($email,$data,$currentUserEmail)
     {
-        return $this->view('email');
+        $name = 'Chandan Kumar';
+        $email = $email;
+        $subject = 'Note shared with you:';
+        $data = $name.' shared a Note with you <br>'.$data;
+        return $data;
     }
 }

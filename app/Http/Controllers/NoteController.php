@@ -351,7 +351,7 @@ class NoteController extends Controller
         }
 
         if ($note->pin == 0) {
-            if($note->archive == 1){
+            if ($note->archive == 1) {
                 $user = Note::where('id', $request->id)
                     ->update(['archive' => 0]);
             }
@@ -456,7 +456,7 @@ class NoteController extends Controller
         }
 
         if ($note->archive == 0) {
-            if($note->pin == 1){
+            if ($note->pin == 1) {
                 $user = Note::where('id', $request->id)
                     ->update(['pin' => 0]);
             }
