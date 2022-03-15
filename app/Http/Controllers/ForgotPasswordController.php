@@ -49,7 +49,7 @@ class ForgotPasswordController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'required|string|email|max:100|unique:users',
         ]);
-
+        
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
@@ -58,6 +58,7 @@ class ForgotPasswordController extends Controller
         $token = Auth::fromUser($user);
 
         if ($user) {
+            
             $sendEmail = new SendEmailRequest();
             $sendEmail->sendEmail($user->email, $token);
         }
